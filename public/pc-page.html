@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="uz">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#05070f" />
+    <title>Computer Club To'lov</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #05070f;
+        --surface: #101725;
+        --surface-2: #161f31;
+        --border: #24304a;
+        --text: #f1f5f9;
+        --muted: #8fa0bd;
+        --accent: #3b82f6;
+        --accent-dark: #1d4ed8;
+        --success: #22c55e;
+        --danger: #f87171;
+      }
+
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        font-size: 16px;
+        line-height: 1.45;
+        overscroll-behavior-y: none;
+      }
+
+      button,
+      input {
+        font: inherit;
+        color: inherit;
+      }
+
+      button {
+        cursor: pointer;
+        border: 0;
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+      }
+
+      .app {
+        max-width: 480px;
+        min-height: 100dvh;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        background: radial-gradient(120% 60% at 50% 0%, #16203a 0%, var(--bg) 55%);
+      }
+
+      /* ---- Header ---- */
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        padding: 18px 20px 14px;
+        background: rgba(5, 7, 15, 0.85);
+        backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .topbar-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .brand {
+        font-size: 13px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+        font-weight: 700;
+      }
+
+      .pc-badge {
+        padding: 8px 14px;
+        border-radius: 999px;
+        font-weight: 800;
+        font-size: 15px;
+        background: rgba(59, 130, 246, 0.16);
+        color: #bfdbfe;
+        border: 1px solid rgba(59, 130, 246, 0.35);
+      }
+
+      .status {
+        margin-top: 10px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--muted);
+        flex: 0 0 auto;
+      }
+
+      .dot.ok {
+        background: var(--success);
+        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.16);
+      }
+
+      .dot.busy {
+        background: #f59e0b;
+        box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.16);
+      }
+
+      /* ---- Steps ---- */
+      .body {
+        flex: 1;
+        padding: 22px 20px 132px;
+      }
+
+      .step {
+        display: none;
+      }
+
+      .step.active {
+        display: block;
+      }
+
+      .title {
+        margin: 0;
+        font-size: 26px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      .subtitle {
+        margin: 10px 0 0;
+        color: var(--muted);
+        font-size: 15px;
+      }
+
+      .section-title {
+        margin: 26px 0 12px;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      /* ---- Form ---- */
+      .field {
+        margin-top: 22px;
+      }
+
+      .phone-input {
+        width: 100%;
+        padding: 18px 18px;
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+
+      .phone-input::placeholder {
+        color: #55617a;
+        font-weight: 500;
+      }
+
+      .phone-input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.16);
+      }
+
+      .primary {
+        width: 100%;
+        margin-top: 16px;
+        padding: 18px;
+        border-radius: 18px;
+        font-size: 17px;
+        font-weight: 800;
+        color: #fff;
+        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+        box-shadow: 0 12px 30px rgba(37, 99, 235, 0.3);
+      }
+
+      .primary:disabled {
+        opacity: 0.5;
+        box-shadow: none;
+      }
+
+      .ghost {
+        width: 100%;
+        margin-top: 12px;
+        padding: 15px;
+        border-radius: 16px;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--muted);
+        background: var(--surface);
+        border: 1px solid var(--border);
+      }
+
+      /* ---- Duration slider ---- */
+      .slider-value {
+        margin-top: 22px;
+        text-align: center;
+      }
+
+      .slider-value b {
+        display: block;
+        font-size: 40px;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+      }
+
+      .slider-value span {
+        display: block;
+        margin-top: 6px;
+        font-size: 15px;
+        color: var(--muted);
+      }
+
+      .slider-wrap {
+        margin-top: 20px;
+      }
+
+      .range {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 34px;
+        background: transparent;
+        touch-action: pan-y;
+      }
+
+      .range::-webkit-slider-runnable-track {
+        height: 10px;
+        border-radius: 999px;
+        background: linear-gradient(
+          to right,
+          var(--accent) 0%,
+          var(--accent) var(--fill, 0%),
+          #22304d var(--fill, 0%),
+          #22304d 100%
+        );
+      }
+
+      .range::-moz-range-track {
+        height: 10px;
+        border-radius: 999px;
+        background: #22304d;
+      }
+
+      .range::-moz-range-progress {
+        height: 10px;
+        border-radius: 999px;
+        background: var(--accent);
+      }
+
+      .range::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 32px;
+        height: 32px;
+        margin-top: -11px;
+        border-radius: 50%;
+        background: #fff;
+        border: 4px solid var(--accent);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+        cursor: pointer;
+      }
+
+      .range::-moz-range-thumb {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #fff;
+        border: 4px solid var(--accent);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+        cursor: pointer;
+      }
+
+      .range:disabled {
+        opacity: 0.45;
+      }
+
+      .range-scale {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 2px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      /* ---- Notice ---- */
+      .notice {
+        margin-top: 18px;
+        padding: 16px;
+        border-radius: 16px;
+        font-size: 15px;
+        line-height: 1.4;
+        border: 1px solid;
+      }
+
+      .notice.info {
+        background: rgba(59, 130, 246, 0.12);
+        border-color: rgba(59, 130, 246, 0.3);
+        color: #bfdbfe;
+      }
+
+      .notice.error {
+        background: rgba(248, 113, 113, 0.1);
+        border-color: rgba(248, 113, 113, 0.3);
+        color: #fecaca;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      /* ---- Result ---- */
+      .success-mark {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: rgba(34, 197, 94, 0.14);
+        border: 1px solid rgba(34, 197, 94, 0.35);
+        font-size: 32px;
+      }
+
+      .summary {
+        margin-top: 22px;
+        border-radius: 20px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        overflow: hidden;
+      }
+
+      .summary-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 16px 18px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .summary-row:last-child {
+        border-bottom: 0;
+      }
+
+      .summary-row span {
+        color: var(--muted);
+        font-size: 15px;
+      }
+
+      .summary-row b {
+        font-size: 16px;
+        font-weight: 700;
+        text-align: right;
+      }
+
+      /* ---- Bottom bar ---- */
+      .bottom-bar {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 10;
+        padding: 14px 20px calc(14px + env(safe-area-inset-bottom));
+        background: rgba(5, 7, 15, 0.92);
+        backdrop-filter: blur(14px);
+        border-top: 1px solid var(--border);
+      }
+
+      .bottom-bar-inner {
+        max-width: 480px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .bottom-total {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .bottom-total span {
+        display: block;
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .bottom-total b {
+        display: block;
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .bottom-bar .primary {
+        margin-top: 0;
+        width: auto;
+        flex: 0 0 auto;
+        min-width: 148px;
+        padding: 16px 22px;
+      }
+
+      @media (max-width: 360px) {
+        .bottom-bar .primary {
+          min-width: 124px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="topbar-row">
+          <span class="brand">Computer Club</span>
+          <span class="pc-badge" id="pc-badge">—</span>
+        </div>
+        <div class="status">
+          <span class="dot" id="status-dot"></span>
+          <span id="status-text">Yuklanmoqda...</span>
+        </div>
+      </header>
+
+      <main class="body">
+        <!-- 1-qadam: telefon -->
+        <section id="step-phone" class="step active">
+          <h1 class="title">Telefoningizni ulang</h1>
+          <p class="subtitle">
+            Kompyuterning ekranida QR kod skaner qiling yoki shu sahifada telefon raqamingizni
+            yozing.
+          </p>
+
+          <div class="field">
+            <input
+              id="phone-input"
+              class="phone-input"
+              type="tel"
+              inputmode="tel"
+              placeholder="+998 90 123 45 67"
+              autocomplete="tel"
+            />
+          </div>
+
+          <div id="phone-message" class="notice error hidden"></div>
+
+          <button id="continue-btn" class="primary" type="button">Davom etish</button>
+        </section>
+
+        <!-- 2-qadam: vaqt tanlash -->
+        <section id="step-payment" class="step">
+          <h2 class="title">Vaqt tanlang</h2>
+          <p class="subtitle">Qancha vaqt kerakligini tanlang, narxi pastda ko'rsatiladi.</p>
+
+          <div id="payment-message" class="notice error hidden"></div>
+
+          <div class="slider-value">
+            <b id="duration-value">1 soat</b>
+            <span id="duration-note">Barmog'ingiz bilan suring</span>
+          </div>
+
+          <div class="slider-wrap">
+            <input
+              id="duration-range"
+              class="range"
+              type="range"
+              min="0"
+              max="1"
+              step="1"
+              value="0"
+            />
+            <div class="range-scale">
+              <span>10 daq</span>
+              <span>24 soat</span>
+            </div>
+          </div>
+
+          <button id="back-btn" class="ghost" type="button">Telefon raqamini o'zgartirish</button>
+        </section>
+
+        <!-- 3-qadam: natija -->
+        <section id="step-result" class="step">
+          <div class="success-mark" id="result-mark">✓</div>
+          <h2 class="title" id="result-title" style="margin-top: 16px">So'rov yuborildi</h2>
+          <p class="subtitle" id="result-note">
+            Kassaga boring va to'lovni qiling. Kassir tasdiqlagach kompyuter ochiladi.
+          </p>
+
+          <div class="summary" id="result-box"></div>
+
+          <div id="result-status" class="notice info">Kassir tasdiqlashini kutmoqda...</div>
+
+          <button id="back-time-btn" class="ghost" type="button">Vaqtni o'zgartirish</button>
+        </section>
+      </main>
+
+      <!-- Pastki bar: har doim ko'rinadi -->
+      <div class="bottom-bar">
+        <div class="bottom-bar-inner">
+          <div class="bottom-total">
+            <span id="bar-label">Jami</span>
+            <b id="bar-value">—</b>
+          </div>
+          <button id="order-btn" class="primary" type="button">Kassaga yuborish</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const state = {
+        pcId: window.location.pathname.split("/").filter(Boolean).pop() || "",
+        data: null,
+        phone: "",
+        minutes: 0,
+        busy: false,
+        resultTimer: null,
+        seenActive: false,
+      };
+
+      const els = {
+        pcBadge: document.getElementById("pc-badge"),
+        statusDot: document.getElementById("status-dot"),
+        statusText: document.getElementById("status-text"),
+        stepPhone: document.getElementById("step-phone"),
+        stepPayment: document.getElementById("step-payment"),
+        stepResult: document.getElementById("step-result"),
+        phoneInput: document.getElementById("phone-input"),
+        phoneMessage: document.getElementById("phone-message"),
+        paymentMessage: document.getElementById("payment-message"),
+        continueBtn: document.getElementById("continue-btn"),
+        orderBtn: document.getElementById("order-btn"),
+        backBtn: document.getElementById("back-btn"),
+        backTimeBtn: document.getElementById("back-time-btn"),
+        range: document.getElementById("duration-range"),
+        durationValue: document.getElementById("duration-value"),
+        durationNote: document.getElementById("duration-note"),
+        resultMark: document.getElementById("result-mark"),
+        resultTitle: document.getElementById("result-title"),
+        resultNote: document.getElementById("result-note"),
+        resultBox: document.getElementById("result-box"),
+        resultStatus: document.getElementById("result-status"),
+        barLabel: document.getElementById("bar-label"),
+        barValue: document.getElementById("bar-value"),
+      };
+
+      function showStep(name) {
+        els.stepPhone.classList.toggle("active", name === "phone");
+        els.stepPayment.classList.toggle("active", name === "payment");
+        els.stepResult.classList.toggle("active", name === "result");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function showMessage(element, text) {
+        element.textContent = text;
+        element.classList.toggle("hidden", !text);
+      }
+
+      function formatMoney(value) {
+        return new Intl.NumberFormat("uz-UZ").format(value) + " so'm";
+      }
+
+      function normalizePhone(value) {
+        return value.replace(/[^\d+]/g, "");
+      }
+
+      function isValidPhone(value) {
+        return /^\+?\d{9,15}$/.test(normalizePhone(value));
+      }
+
+      async function request(url, options) {
+        const response = await fetch(url, {
+          headers: { "Content-Type": "application/json" },
+          ...options,
+        });
+
+        const payload = await response.json().catch(() => ({
+          message: "Server javob qaytarmadi",
+        }));
+
+        if (!response.ok) {
+          throw new Error(payload.message || "So'rov bajarilmadi");
+        }
+
+        return payload;
+      }
+
+      function renderStatus() {
+        const status = state.data.runtimeStatus;
+        const labels = {
+          available: "Bo'sh — to'lovga tayyor",
+          busy: "Hozir band",
+          offline: "Offline — administratorni chaqiring",
+        };
+
+        els.statusText.textContent = labels[status];
+        els.statusDot.className = "dot " + (status === "available" ? "ok" : status === "busy" ? "busy" : "");
+      }
+
+      function formatDuration(minutes) {
+        if (minutes < 60) {
+          return minutes + " daqiqa";
+        }
+
+        const hours = Math.floor(minutes / 60);
+        const rest = minutes % 60;
+        return rest === 0 ? hours + " soat" : hours + " soat " + rest + " daq";
+      }
+
+      function renderDuration() {
+        const isUnavailable = state.data.runtimeStatus !== "available";
+        const maxIndex = state.data.tariffs.length - 1;
+
+        els.durationValue.textContent = formatDuration(state.minutes);
+        els.durationNote.textContent = "Xar 10 daqiqaga moslashadi";
+        els.range.disabled = isUnavailable;
+
+        const percent = maxIndex > 0 ? (Number(els.range.value) / maxIndex) * 100 : 0;
+        els.range.style.setProperty("--fill", percent + "%");
+      }
+
+      function renderTotal() {
+        const tariff = state.data.tariffs.find((item) => item.minutes === state.minutes);
+        const isUnavailable = state.data.runtimeStatus !== "available";
+
+        if (!tariff) {
+          els.barLabel.textContent = "Jami";
+          els.barValue.textContent = "—";
+          els.orderBtn.disabled = true;
+          return;
+        }
+
+        els.barLabel.textContent = formatDuration(state.minutes) + " uchun jami";
+        els.barValue.textContent = formatMoney(tariff.price);
+        els.orderBtn.disabled = isUnavailable || state.busy;
+      }
+
+      function renderResult(request) {
+        const tariff = state.data.tariffs.find((item) => item.minutes === request.requestedMinutes);
+
+        const rows = [
+          ["Kompyuter", request.pcId],
+          ["Telefon", request.phone || state.phone],
+          ["Vaqt", formatDuration(request.requestedMinutes)],
+          ["To'lov", tariff ? formatMoney(tariff.price) : "—"],
+        ];
+
+        els.resultBox.innerHTML = rows
+          .map(
+            (row) =>
+              '<div class="summary-row"><span>' +
+              row[0] +
+              "</span><b>" +
+              row[1] +
+              "</b></div>",
+          )
+          .join("");
+      }
+
+      function showResultStatus(kind, text) {
+        els.resultStatus.className = "notice " + kind;
+        els.resultStatus.textContent = text;
+      }
+
+      function currentRequest() {
+        if (state.data.pendingCashRequest) {
+          return state.data.pendingCashRequest;
+        }
+
+        return {
+          pcId: state.pcId,
+          phone: state.phone,
+          requestedMinutes: state.data.activeSession
+            ? state.data.activeSession.durationMinutes
+            : state.minutes,
+        };
+      }
+
+      function renderResultState() {
+        const session = state.data.activeSession;
+        const isMine = session && state.phone && session.userPhone === state.phone;
+
+        if (isMine) {
+          state.seenActive = true;
+
+          const time = new Date(session.endsAt).toLocaleTimeString("uz-UZ", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+
+          els.resultMark.textContent = "▶";
+          els.resultTitle.textContent = "Kompyuteringiz ochildi";
+          els.resultNote.textContent = "Yaxshi dam oling. Vaqt tugaganda kompyuter qayta bloklanadi.";
+          els.backTimeBtn.classList.add("hidden");
+          showResultStatus("info", "Tugash vaqti: " + time);
+          els.barLabel.textContent = "Sessiya faol";
+          els.barValue.textContent = formatDuration(session.durationMinutes);
+          els.orderBtn.disabled = true;
+          return;
+        }
+
+        if (session) {
+          els.resultMark.textContent = "×";
+          els.resultTitle.textContent = "Kompyuter band";
+          els.resultNote.textContent = "Bu kompyuter hozir ishlatilmoqda. Boshqa kompyuterni tanlang.";
+          els.backTimeBtn.classList.remove("hidden");
+          showResultStatus("error", "Bo'sh kompyuterni tanlang");
+          els.barLabel.textContent = "Jami";
+          els.barValue.textContent = "—";
+          els.orderBtn.disabled = true;
+          return;
+        }
+
+        if (state.data.pendingCashRequest) {
+          els.resultMark.textContent = "✓";
+          els.resultTitle.textContent = "So'rov yuborildi";
+          els.resultNote.textContent =
+            "Kassaga boring va to'lovni qiling. Kassir tasdiqlagach kompyuter ochiladi.";
+          els.backTimeBtn.classList.remove("hidden");
+          showResultStatus("info", "Kassir tasdiqlashini kutmoqda...");
+          els.barLabel.textContent = "So'rov yuborildi";
+          els.barValue.textContent =
+            state.data.pendingCashRequest.requestedMinutes + " daqiqa";
+          els.orderBtn.disabled = true;
+          return;
+        }
+
+        els.resultMark.textContent = state.seenActive ? "■" : "!";
+        els.resultTitle.textContent = state.seenActive ? "Sessiya tugadi" : "So'rov yopildi";
+        els.resultNote.textContent = state.seenActive
+          ? "Kompyuter qayta bloklandi. Yana o'ynash uchun vaqt tanlang."
+          : "Kassir so'rovni qabul qilmadi. Kassadan aniqlashtirib, qaytadan urinib ko'ring.";
+        els.backTimeBtn.classList.remove("hidden");
+        showResultStatus(state.seenActive ? "info" : "error", state.seenActive ? "Sessiya yakunlandi" : "Faol so'rov yo'q");
+        els.barLabel.textContent = "Jami";
+        els.barValue.textContent = "—";
+        els.orderBtn.disabled = true;
+      }
+
+      function applyPcData(data) {
+        state.data = data;
+        document.title = data.pcId + " — Kassaga to'lov";
+        els.pcBadge.textContent = data.pcId;
+
+        const minutes = data.tariffs.map((tariff) => tariff.minutes);
+        els.range.min = "0";
+        els.range.max = String(minutes.length - 1);
+
+        if (data.pendingCashRequest) {
+          state.minutes = data.pendingCashRequest.requestedMinutes;
+        } else if (!minutes.includes(state.minutes)) {
+          state.minutes = minutes.includes(60) ? 60 : minutes[0];
+        }
+
+        els.range.value = String(Math.max(0, minutes.indexOf(state.minutes)));
+
+        renderStatus();
+        renderDuration();
+        renderTotal();
+      }
+
+      async function loadPc() {
+        const data = await request("/api/pc/" + encodeURIComponent(state.pcId));
+        applyPcData(data);
+
+        if (data.activeSession || data.pendingCashRequest) {
+          renderResult(currentRequest());
+          renderResultState();
+          showStep("result");
+          startResultPolling();
+        }
+      }
+
+      function startResultPolling() {
+        if (state.resultTimer) return;
+        state.resultTimer = setInterval(refreshResult, 3000);
+      }
+
+      function stopResultPolling() {
+        if (!state.resultTimer) return;
+        clearInterval(state.resultTimer);
+        state.resultTimer = null;
+      }
+
+      async function refreshResult() {
+        if (!els.stepResult.classList.contains("active")) return;
+
+        try {
+          const data = await request("/api/pc/" + encodeURIComponent(state.pcId));
+          applyPcData(data);
+
+          if (data.pendingCashRequest || data.activeSession) {
+            renderResult(currentRequest());
+          }
+
+          renderResultState();
+        } catch (error) {
+          showResultStatus("error", "Server bilan aloqa yo'q — qayta urinilmoqda");
+        }
+      }
+
+      function openPaymentStep() {
+        const phone = normalizePhone(els.phoneInput.value.trim());
+
+        if (!isValidPhone(phone)) {
+          showMessage(els.phoneMessage, "Telefon raqamini to'g'ri kiriting. Masalan: +998901234567");
+          return;
+        }
+
+        state.phone = phone;
+        showMessage(els.phoneMessage, "");
+        showStep("payment");
+      }
+
+      async function submitOrder() {
+        if (state.busy) return;
+
+        if (!state.minutes) {
+          showMessage(els.paymentMessage, "Avval vaqtni tanlang.");
+          return;
+        }
+
+        state.busy = true;
+        els.orderBtn.disabled = true;
+        els.orderBtn.textContent = "Yuborilmoqda...";
+        showMessage(els.paymentMessage, "");
+
+        try {
+          await request("/cash-requests", {
+            method: "POST",
+            body: JSON.stringify({
+              pcId: state.pcId,
+              requestedMinutes: state.minutes,
+              phone: state.phone,
+            }),
+          });
+
+          await loadPc();
+        } catch (error) {
+          showMessage(
+            els.paymentMessage,
+            error instanceof Error ? error.message : "So'rovni yuborib bo'lmadi.",
+          );
+          renderTotal();
+        } finally {
+          state.busy = false;
+          els.orderBtn.textContent = "Kassaga yuborish";
+        }
+      }
+
+      function backToPhone() {
+        showMessage(els.paymentMessage, "");
+        stopResultPolling();
+        showStep("phone");
+        els.phoneInput.focus();
+      }
+
+      function backToTime() {
+        stopResultPolling();
+        showStep("payment");
+        renderTotal();
+      }
+
+      els.range.addEventListener("input", () => {
+        if (state.busy) return;
+        const tariff = state.data.tariffs[Number(els.range.value)];
+        if (!tariff) return;
+        state.minutes = tariff.minutes;
+        showMessage(els.paymentMessage, "");
+        renderDuration();
+        renderTotal();
+      });
+
+      els.continueBtn.addEventListener("click", openPaymentStep);
+      els.orderBtn.addEventListener("click", submitOrder);
+      els.backBtn.addEventListener("click", backToPhone);
+      els.backTimeBtn.addEventListener("click", backToTime);
+      els.phoneInput.addEventListener("input", () => showMessage(els.phoneMessage, ""));
+      els.phoneInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          openPaymentStep();
+        }
+      });
+
+      loadPc().catch((error) => {
+        els.statusText.textContent = "Server bilan bog'lanishda xato";
+        els.statusDot.className = "dot busy";
+        showMessage(
+          els.phoneMessage,
+          error instanceof Error ? error.message : "Sahifani yuklab bo'lmadi.",
+        );
+      });
+    </script>
+  </body>
+</html>

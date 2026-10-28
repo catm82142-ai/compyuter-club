@@ -1,0 +1,7 @@
+node_modules
+dist
+.env
+.dotnet
+dist-client
+client/bin
+client/obj

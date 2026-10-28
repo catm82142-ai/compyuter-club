@@ -1,0 +1,12 @@
+{
+  "serverUrl": "http://192.168.1.10:4000",
+  "pcId": "PC-01",
+  "lockdown": false,
+  "games": {
+    "cs2": "C:\\Windows\\notepad.exe",
+    "dota2": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Dota 2\\game\\dota2.exe",
+    "valorant": "C:\\Riot Games\\VALORANT\\live\\VALORANT.exe",
+    "gta5": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Grand Theft Auto V\\GTA5.exe",
+    "steam": "C:\\Program Files (x86)\\Steam\\steam.exe"
+  }
+}

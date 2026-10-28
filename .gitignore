@@ -1,0 +1,9 @@
+node_modules
+dist
+.env
+
+# Lokal .NET SDK va C# build chiqindilari
+.dotnet
+dist-client
+client/bin
+client/obj

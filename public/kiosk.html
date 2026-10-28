@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kiosk — Computer Club</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Segoe UI", system-ui, sans-serif; background: #0B1020; color: #E8ECF5;
+    height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  #lock, #session { text-align: center; }
+  #lock h1 { font-size: 88px; margin-bottom: 30px; }
+  #lock img { width: 340px; height: 340px; background: #fff; border-radius: 20px; padding: 20px; }
+  #lock p { font-size: 26px; margin-top: 34px; }
+  #lock .sub { font-size: 18px; color: #8B95AB; margin-top: 10px; }
+  #status { position: fixed; top: 20px; left: 24px; font-size: 17px; color: #8B95AB; }
+  #session { display: none; }
+  #session .timer { font-size: 140px; font-weight: bold; color: #4ADE80; }
+  #session .phone { font-size: 26px; color: #8B95AB; margin-top: 10px; }
+</style>
+</head>
+<body>
+  <div id="status">Yuklanmoqda...</div>
+
+  <div id="lock">
+    <h1 id="pc">PC-00</h1>
+    <img id="qr" alt="QR kod" />
+    <p>To'lov qilish uchun ushbu kodni skan qiling</p>
+    <div class="sub">Payme · Click · Paynet — Xolis orqali</div>
+  </div>
+
+  <div id="session">
+    <div class="timer" id="timer">00:00</div>
+    <div class="phone" id="phone"></div>
+  </div>
+
+<script>
+const pcId = location.pathname.split("/").pop();
+document.getElementById("pc").textContent = pcId;
+document.getElementById("qr").src = `/api/qr?pcId=${encodeURIComponent(pcId)}`;
+
+const statusEl = document.getElementById("status");
+const lockEl = document.getElementById("lock");
+const sessionEl = document.getElementById("session");
+let endsAt = null;
+
+function fmt(iso) {
+  if (!iso) return "--:--";
+  const s = Math.max(0, Math.floor((new Date(iso) - Date.now()) / 1000));
+  const m = Math.floor(s / 60), sec = s % 60;
+  return m >= 60
+    ? `${Math.floor(m/60)}:${String(m % 60).padStart(2, "0")}:${String(sec).padStart(2, "0")}`
+    : `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+}
+
+async function poll() {
+  try {
+    const res = await fetch(`/api/kiosk/${encodeURIComponent(pcId)}`);
+    const data = await res.json();
+    statusEl.textContent = data.runtimeStatus === "available" ? "Bo'sh — to'lov kutilmoqda" : "Band";
+
+    const active = data.activeSession;
+    if (active) {
+      endsAt = active.endsAt;
+      document.getElementById("phone").textContent = active.userPhone || "";
+      lockEl.style.display = "none";
+      sessionEl.style.display = "block";
+    } else {
+      endsAt = null;
+      lockEl.style.display = "block";
+      sessionEl.style.display = "none";
+    }
+  } catch (e) {
+    statusEl.textContent = "Serverga ulanmadi — qayta urinilmoqda";
+  }
+}
+
+setInterval(() => {
+  if (endsAt) document.getElementById("timer").textContent = fmt(endsAt);
+}, 1000);
+
+poll();
+setInterval(poll, 2000);
+</script>
+</body>
+</html>

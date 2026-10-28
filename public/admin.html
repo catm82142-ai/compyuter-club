@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kassa — Computer Club</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Segoe UI", system-ui, sans-serif; background: #0F1526; color: #E8ECF5; padding: 24px; }
+  h1 { font-size: 26px; margin-bottom: 6px; }
+  .sub { color: #8B95AB; margin-bottom: 24px; font-size: 15px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+  .pc { background: #16203A; border: 1px solid #24304F; border-radius: 16px; padding: 20px; }
+  .pc h2 { font-size: 22px; margin-bottom: 4px; }
+  .status { font-size: 14px; margin-bottom: 16px; }
+  .available { color: #4ADE80; } .busy { color: #FBBF24; } .offline { color: #E5484D; }
+  .timer { font-size: 32px; font-weight: bold; margin-bottom: 4px; }
+  .meta { color: #8B95AB; font-size: 14px; margin-bottom: 16px; }
+  input, select { width: 100%; padding: 11px 12px; border-radius: 10px; border: 1px solid #2C3A5A;
+    background: #0F1526; color: #E8ECF5; font-size: 15px; margin-bottom: 10px; }
+  button { width: 100%; padding: 13px; border: none; border-radius: 10px; font-size: 16px;
+    font-weight: 600; cursor: pointer; margin-bottom: 8px; }
+  .start { background: #4ADE80; color: #06210F; }
+  .stop { background: #E5484D; color: #2A0508; }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  .note { background: #16203A; border: 1px solid #24304F; border-radius: 14px; padding: 18px; margin-top: 22px; }
+  .note p { color: #8B95AB; font-size: 14px; line-height: 1.6; }
+  .games { margin-top: 4px; border-top: 1px solid #24304F; padding-top: 14px; }
+  .games summary { cursor: pointer; color: #8B95AB; font-size: 14px; margin-bottom: 12px; }
+  .games summary:hover { color: #E8ECF5; }
+  .check { display: flex; align-items: center; gap: 9px; padding: 7px 0; font-size: 15px; color: #E8ECF5; }
+  .check input { width: 18px; height: 18px; margin: 0; accent-color: #4ADE80; }
+  .unlock { background: #2C3A5A; color: #E8ECF5; }
+  .save { background: #3B82F6; color: #06142E; }
+  .requests { margin-bottom: 24px; }
+  .requests h2 { font-size: 18px; margin-bottom: 12px; }
+  .req { background: #1B2743; border: 1px solid #3B82F6; border-radius: 16px; padding: 18px; margin-bottom: 12px; }
+  .req h3 { font-size: 19px; margin-bottom: 6px; }
+  .req .meta { color: #8B95AB; font-size: 14px; margin-bottom: 12px; }
+  .req-row { display: flex; gap: 10px; }
+  .req-row button { margin-bottom: 0; }
+  .login { max-width: 420px; margin: 60px auto; background: #16203A; border: 1px solid #24304F; border-radius: 16px; padding: 24px; }
+  .login h2 { font-size: 20px; margin-bottom: 16px; }
+  .login .err { color: #E5484D; font-size: 14px; margin-top: 4px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+  <div id="login" class="login hidden">
+    <h2>Kassa paneliga kirish</h2>
+    <input id="key-input" type="password" placeholder="Admin paroli" />
+    <button class="save" onclick="saveKey()">Kirish</button>
+    <p id="login-error" class="err"></p>
+  </div>
+
+  <div id="panel">
+  <h1>Kassa paneli</h1>
+  <p class="sub">Mijoz stiker orqali so'rov yuboradi — Xolis'da to'lovni tekshirib, shu yerda tasdiqlaysiz.</p>
+
+  <div id="requests" class="requests"></div>
+
+  <div id="grid" class="grid"></div>
+
+  <div class="note">
+    <p>
+      <strong>Tartib:</strong> Mijoz to'lovni qiladi → Xolis ilovasida summani tekshirasiz →
+      shu yerdan vaqtni tanlab <b>Ochish</b> bosasiz → PC blokdan chiqadi va o'yin boshlanadi.
+      Mijoz stikerni skanerlab so'rov yuborsa, u yuqoridagi ro'yxatda chiqadi —
+      <b>Tasdiqlash va ochish</b> tugmasi bilan bir bosishda ochiladi.
+      Vaqt tugaganda PC o'zi qayta bloklanadi.
+    </p>
+  </div>
+  </div>
+
+<script>
+const grid = document.getElementById("grid");
+const requestsBox = document.getElementById("requests");
+const loginBox = document.getElementById("login");
+const panelBox = document.getElementById("panel");
+const keyInput = document.getElementById("key-input");
+const loginError = document.getElementById("login-error");
+
+let adminKey = localStorage.getItem("adminKey") || "";
+
+function fmt(iso) {
+  if (!iso) return "--:--";
+  const s = Math.max(0, Math.floor((new Date(iso) - Date.now()) / 1000));
+  const m = Math.floor(s / 60), sec = s % 60;
+  return m >= 60 ? `${Math.floor(m/60)}:${String(m%60).padStart(2,"0")}:${String(sec).padStart(2,"0")}`
+                 : `${m}:${String(sec).padStart(2,"0")}`;
+}
+
+function time(iso) {
+  if (!iso) return "--:--";
+  return new Date(iso).toLocaleTimeString("uz-UZ", { hour: "2-digit", minute: "2-digit" });
+}
+
+function showLogin(message) {
+  panelBox.classList.add("hidden");
+  loginBox.classList.remove("hidden");
+  loginError.textContent = message || "";
+}
+
+function showPanel() {
+  loginBox.classList.add("hidden");
+  panelBox.classList.remove("hidden");
+}
+
+function saveKey() {
+  const value = keyInput.value.trim();
+  if (!value) {
+    loginError.textContent = "Parolni kiriting";
+    return;
+  }
+  adminKey = value;
+  localStorage.setItem("adminKey", adminKey);
+  refresh();
+}
+
+async function api(path, options = {}) {
+  const headers = { ...(options.headers || {}) };
+  if (adminKey) headers["x-admin-key"] = adminKey;
+
+  const res = await fetch(path, { ...options, headers });
+  const data = await res.json().catch(() => ({}));
+
+  if (res.status === 401) {
+    adminKey = "";
+    localStorage.removeItem("adminKey");
+    showLogin("Parol noto'g'ri");
+    throw new Error("Parol noto'g'ri");
+  }
+
+  if (!res.ok) throw new Error(data.message || "Xatolik");
+  return data;
+}
+
+async function start(pcId, minutes, phone, gameId) {
+  await api(`/admin/pcs/${pcId}/start`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      minutes: Number(minutes),
+      phone: phone || undefined,
+      gameId: gameId || undefined,
+    }),
+  });
+  refresh();
+}
+
+async function stop(sessionId) {
+  await api(`/sessions/${sessionId}/end`, { method: "POST" });
+  refresh();
+}
+
+async function saveGames(pcId, container) {
+  const checked = [...container.querySelectorAll("input:checked")].map(i => i.value);
+  await api(`/admin/pcs/${pcId}/games`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ gameIds: checked }),
+  });
+  refresh();
+}
+
+async function toggleLock(pcId, locked) {
+  await api(`/admin/pcs/${pcId}/lock`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ locked }),
+  });
+  refresh();
+}
+
+async function approveRequest(requestId, gameId) {
+  try {
+    await api(`/admin/cash-requests/${requestId}/approve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ gameId: gameId || undefined }),
+    });
+  } catch (error) {
+    alert(error.message);
+  }
+  refresh();
+}
+
+async function rejectRequest(requestId) {
+  try {
+    await api(`/admin/cash-requests/${requestId}/reject`, { method: "POST" });
+  } catch (error) {
+    alert(error.message);
+  }
+  refresh();
+}
+
+function requestCard(request, pc, games) {
+  const allowed = games.filter(g => pc && pc.allowedGameIds.includes(g.gameId));
+  const options = `<option value="">O'yinsiz (bo'sh qoldirish)</option>` +
+    allowed.map(g => `<option value="${g.gameId}">${g.name}</option>`).join("");
+
+  return `<div class="req">
+    <h3>${request.pcId} — ${request.requestedMinutes} daqiqa</h3>
+    <div class="meta">${request.phone || "telefon kiritilmagan"} · so'ralgan vaqt ${time(request.createdAt)}</div>
+    <select id="reqgame-${request.requestId}">${options}</select>
+    <div class="req-row">
+      <button class="start" onclick="approveRequest('${request.requestId}', document.getElementById('reqgame-${request.requestId}').value)">Tasdiqlash va ochish</button>
+      <button class="stop" onclick="rejectRequest('${request.requestId}')">Rad etish</button>
+    </div>
+  </div>`;
+}
+
+function renderRequests(pending, pcs, games) {
+  if (pending.length === 0) {
+    requestsBox.innerHTML = "";
+    return;
+  }
+
+  requestsBox.innerHTML = `<h2>Kassaga tushgan so'rovlar (${pending.length})</h2>` +
+    pending.map(request => requestCard(request, pcs.find(pc => pc.pcId === request.pcId), games)).join("");
+}
+
+function gameEditor(pc, allGames) {
+  const boxes = allGames.map(g => `
+    <label class="check">
+      <input type="checkbox" value="${g.gameId}"
+        ${pc.allowedGameIds.includes(g.gameId) ? "checked" : ""} />
+      ${g.name}
+    </label>`).join("");
+
+  return `<details class="games">
+    <summary>Belgilangan o'yinlar (${pc.allowedGameIds.length})</summary>
+    <div id="g-${pc.pcId}">${boxes}</div>
+    <button class="save" onclick="saveGames('${pc.pcId}', document.getElementById('g-${pc.pcId}'))">Saqlash</button>
+  </details>`;
+}
+
+function card(pc, session, games) {
+  const statusLabels = { available: "Bo'sh", busy: "Band", offline: "Offline" };
+  const isBusy = pc.runtimeStatus === "busy" && session;
+  const lockLabel = pc.locked ? "Bloklashni ochish" : "Qayta bloklash";
+  const lockFn = `toggleLock('${pc.pcId}', ${!pc.locked})`;
+  const lockButton = `<button class="unlock" onclick="${lockFn}">${lockLabel}</button>`;
+
+  if (isBusy) {
+    const game = games.find(g => g.gameId === session.gameId);
+    return `<div class="pc">
+      <h2>${pc.pcId}</h2>
+      <div class="status busy">${statusLabels[pc.runtimeStatus]}</div>
+      <div class="timer" data-ends="${session.endsAt}">${fmt(session.endsAt)}</div>
+      <div class="meta">${session.durationMinutes} daqiqa · ${session.userPhone || "telefon kiritilmagan"}</div>
+      <div class="meta" style="color:#4ADE80">${game ? game.name : "O'yin tanlanmagan"}</div>
+      <button class="stop" onclick="stop('${session.sessionId}')">Tugatish</button>
+      ${lockButton}
+      ${gameEditor(pc, games)}
+    </div>`;
+  }
+
+  const options = `<option value="">O'yinsiz (bo'sh qoldirish)</option>` +
+    games.map(g => `<option value="${g.gameId}">${g.name}</option>`).join("");
+
+  return `<div class="pc">
+    <h2>${pc.pcId}</h2>
+    <div class="status ${pc.runtimeStatus}">${statusLabels[pc.runtimeStatus]}</div>
+    <div class="meta">${pc.name || ""}</div>
+    <input id="phone-${pc.pcId}" placeholder="Telefon (ixtiyoriy)" inputmode="tel" />
+    <select id="min-${pc.pcId}">
+      <option value="30">30 daqiqa</option>
+      <option value="60" selected>1 soat</option>
+      <option value="120">2 soat</option>
+      <option value="180">3 soat</option>
+      <option value="300">5 soat</option>
+      <option value="480">8 soat</option>
+    </select>
+    <select id="game-${pc.pcId}">${options}</select>
+    <button class="start" onclick="start('${pc.pcId}', document.getElementById('min-${pc.pcId}').value, document.getElementById('phone-${pc.pcId}').value, document.getElementById('game-${pc.pcId}').value)"
+      ${pc.runtimeStatus === "offline" ? "disabled" : ""}>Ochish</button>
+    ${lockButton}
+    ${gameEditor(pc, games)}
+  </div>`;
+}
+
+async function refresh() {
+  try {
+    const [pcs, sessions, games, cashRequests] = await Promise.all([
+      api("/admin/pcs"),
+      api("/admin/sessions"),
+      api("/admin/games"),
+      api("/admin/cash-requests"),
+    ]);
+
+    renderRequests(cashRequests.filter(r => r.status === "pending"), pcs, games);
+
+    const active = sessions.filter(s => s.status === "active");
+    grid.innerHTML = pcs.map(pc =>
+      card(pc, active.find(s => s.pcId === pc.pcId), games)
+    ).join("");
+
+    showPanel();
+  } catch (error) {
+    if (loginBox.classList.contains("hidden")) {
+      grid.innerHTML = `<p style="color:#E5484D">${error.message}</p>`;
+    }
+  }
+}
+
+setInterval(() => {
+  document.querySelectorAll("[data-ends]").forEach(el => {
+    el.textContent = fmt(el.dataset.ends);
+  });
+}, 1000);
+
+setInterval(() => {
+  if (!panelBox.classList.contains("hidden")) refresh();
+}, 5000);
+
+keyInput.addEventListener("keydown", event => {
+  if (event.key === "Enter") saveKey();
+});
+
+if (adminKey) {
+  refresh();
+} else {
+  showLogin("");
+}
+</script>
+</body>
+</html>
